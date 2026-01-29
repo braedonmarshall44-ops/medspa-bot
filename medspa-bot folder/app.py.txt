@@ -1,0 +1,31 @@
+from flask import Flask, request
+from twilio.twiml.messaging_response import MessagingResponse
+from openai import OpenAI
+import os
+
+app = Flask(__name__)
+
+client = OpenAI(api_key="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
+")
+
+@app.route("/sms", methods=["POST"])
+def sms_reply():
+    incoming_msg = request.form.get("Body")
+
+    response_ai = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a friendly med spa receptionist. Help book appointments and answer FAQs. Never give medical advice."},
+            {"role": "user", "content": incoming_msg}
+        ]
+    )
+
+    ai_text = response_ai.choices[0].message.content
+
+    resp = MessagingResponse()
+    resp.message(ai_text)
+
+    return str(resp)
+
+if __name__ == "__main__":
+    app.run()
